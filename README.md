@@ -13,6 +13,8 @@ real legitimate mail, with the tuning process documented in [TUNING.md](TUNING.m
 > **Safety:** phishscan only *reads* emails. It never opens attachments, never visits
 > links, and prints every URL defanged (`hxxps://evil[.]com`) so nothing is clickable.
 
+![phishscan report rating a fake PayPal phishing email LIKELY PHISHING (100/100), listing ten findings with defanged URLs](docs/example-report.png)
+
 ## Example
 
 ```
