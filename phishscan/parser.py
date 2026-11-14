@@ -1,4 +1,4 @@
-"""Step 1: parse an .eml file and pull out the headers, URLs and attachments.
+"""Email parsing: read an .eml file and extract headers, authentication results, URLs and attachment hashes.
 
 Usage:
     python -m phishscan.parser samples/test1.eml

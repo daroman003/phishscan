@@ -1,5 +1,7 @@
 # phishscan
 
+[![tests](https://github.com/daroman003/phishscan/actions/workflows/tests.yml/badge.svg)](https://github.com/daroman003/phishscan/actions/workflows/tests.yml)
+
 A command-line phishing email analyzer written in Python. Give it an `.eml` file and it
 parses the headers, links and attachments, runs 25+ detection checks, and returns a
 0-100 risk score with a plain-English explanation of every finding.
@@ -78,15 +80,22 @@ deliberately low so they only matter in combination.
 
 ## Installation
 
-Requires Python 3.10+.
+Developed and tested on Python 3.13.
 
 ```bash
-git clone https://github.com/Axotiles/phishscan.git
+git clone https://github.com/daroman003/phishscan.git
 cd phishscan
 python -m venv .venv
 # Windows PowerShell:  .venv\Scripts\Activate.ps1
 # macOS / Linux:       source .venv/bin/activate
 pip install -r requirements.txt
+```
+
+`requirements.txt` holds only what phishscan needs to run. To run the tests as well,
+install the development requirements instead (they include the runtime ones):
+
+```bash
+pip install -r requirements-dev.txt
 ```
 
 ## Usage
@@ -180,8 +189,13 @@ TUNING.md         log of every tuning change
 ## Tests
 
 ```bash
+pip install -r requirements-dev.txt
 python -m pytest -v
 ```
+
+The suite uses only the fake emails in `samples/` and messages built inside the tests,
+so it needs no private data or network access. GitHub Actions runs it on every push and
+pull request ([workflow](.github/workflows/tests.yml)).
 
 ## Disclaimer
 

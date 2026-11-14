@@ -1,4 +1,4 @@
-"""Step 4c: one command that runs every check.
+"""Command-line entry point: run every check on one .eml file and print a report.
 
 Usage:
     python -m phishscan samples/test1.eml

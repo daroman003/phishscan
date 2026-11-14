@@ -1,6 +1,8 @@
-"""Step 7: automated tests. Run from the project folder with:  python -m pytest -v
+"""Test suite for phishscan. Run from the project folder with:  python -m pytest -v
 
-The VirusTotal tests use a fake response, so they never touch the network.
+Uses only the fake emails committed in samples/ and synthetic messages built in the
+tests, so it runs without the private sample folders. The VirusTotal tests use a fake
+response, so they never touch the network.
 """
 from email.message import EmailMessage
 from pathlib import Path

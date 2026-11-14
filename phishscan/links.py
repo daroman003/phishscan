@@ -1,9 +1,8 @@
-"""Step 2: analyze the links inside an email's HTML.
+"""Link analysis for an email's HTML bodies.
 
-Finds <a> tags, compares the text the reader SEES with where the link REALLY
-goes, and flags URL shorteners.
-
-Needs:  pip install beautifulsoup4 tldextract
+Finds <a> tags, compares the text the reader sees with where the link really goes,
+recognizes known click-tracking services and links to the sender's own domain, and
+flags URL shorteners.
 
 Usage:
     python -m phishscan.links samples/test1.eml

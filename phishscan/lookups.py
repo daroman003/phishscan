@@ -1,11 +1,11 @@
-"""Step 6: optional VirusTotal reputation lookups (attachment hashes and URLs).
+"""Optional VirusTotal reputation lookups for attachment hashes and URLs.
 
 Setup:
-    1. Make a free account at virustotal.com and copy your API key.
+    1. Create a free account at virustotal.com and copy your API key.
     2. In the project folder, create a file named .env containing one line:
            VT_API_KEY=paste-your-key-here
-       (.env is already in your .gitignore. Never commit it.)
-    3. pip install requests python-dotenv
+       (.env is gitignored. Never commit it.) A real VT_API_KEY environment
+       variable works too.
 
 Usage:
     python -m phishscan samples/test1.eml --vt

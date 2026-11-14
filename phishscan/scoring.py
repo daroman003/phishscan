@@ -1,9 +1,9 @@
-"""Step 4b: turn a list of findings into a single risk score and verdict."""
+"""Scoring: combine findings into a 0-100 risk score and a verdict."""
 
 WEIGHTS = {"high": 30, "medium": 15, "low": 5}
 SEVERITY_ORDER = {"high": 0, "medium": 1, "low": 2}
 
-# Tune these as you test against real samples.
+# Verdict thresholds, tuned against real samples (see TUNING.md).
 LIKELY_PHISHING_AT = 60
 SUSPICIOUS_AT = 30
 

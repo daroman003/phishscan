@@ -1,4 +1,4 @@
-"""Step 3: detect lookalike domains that imitate well-known brands.
+"""Lookalike-domain detection for domains that imitate well-known brands.
 
 Catches things like:
     paypa1.com                  (1 instead of l)
@@ -6,8 +6,6 @@ Catches things like:
     paypal-secure-login.net     (brand name inside someone else's domain)
     paypal.com.account-verify.net  (brand used as a subdomain of a different site)
     xn--...                     (punycode, often used for lookalike characters)
-
-Needs:  pip install tldextract rapidfuzz
 
 Usage:
     python -m phishscan.lookalikes samples/test1.eml

@@ -1,13 +1,13 @@
-"""Step 5: run phishscan over a whole folder of .eml files and save a CSV.
+"""Batch evaluation: scan a folder of .eml files, write a CSV, and print accuracy numbers.
 
 Usage:
     python -m phishscan.batch samples/legit    --label legit    --out results.csv
     python -m phishscan.batch samples/phishing --label phishing --out results.csv --append
 
-The summary at the end gives you the accuracy numbers for your README / resume:
-  - for a 'legit' folder:    false positives = legit emails that got flagged
-  - for a 'phishing' folder: detected        = phishing emails that got flagged
-"flagged" means the verdict is SUSPICIOUS or LIKELY PHISHING (not LOW RISK).
+The summary reports, depending on the label:
+  - legit:    false positives = legitimate emails that were flagged
+  - phishing: detected        = phishing emails that were flagged
+"Flagged" means the verdict is SUSPICIOUS or LIKELY PHISHING (not LOW RISK).
 """
 import argparse
 import csv

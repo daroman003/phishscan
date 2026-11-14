@@ -1,12 +1,14 @@
-"""Step 8a: URL pattern checks that need no reputation service.
+"""URL pattern checks that need no reputation service.
 
 Found by studying real phishing samples:
   * links on cheap, throwaway top-level domains (.store, .site, .art ...)
   * links hosted on free app/site platforms (run.app, github.io, blogspot.com ...)
   * hostnames that contain a raw IP address (251.242.109.208.host.example.net)
+  * hostnames that are an IP address written as one number (2997024026, 0xb2a4...)
 
-All three are MEDIUM on purpose: legitimate mail occasionally does one of them, so they
-only push an email over the line when combined with other signals.
+The first three are MEDIUM on purpose: legitimate mail occasionally does one of them, so
+they only push an email over the line when combined with other signals. The encoded-IP
+check is HIGH because legitimate mail does not use it.
 
 Usage:
     python -m phishscan.urlchecks samples/phishing/sample-10930.eml

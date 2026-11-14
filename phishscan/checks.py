@@ -1,4 +1,4 @@
-"""Step 4a: header, sender, wording and attachment checks.
+"""Header, sender, wording and attachment checks.
 
 Every check returns a list of findings shaped like:
     {"check": "spf_fail", "severity": "high", "detail": "..."}
