@@ -18,7 +18,14 @@ from phishscan.checks import (
 )
 from phishscan.links import check_links, extract_links
 from phishscan.lookalikes import check_host, check_lookalikes, collect_hosts
-from phishscan.parser import defang, get_auth_results, get_sender_info, list_attachments, load_eml
+from phishscan.parser import (
+    defang,
+    get_auth_results,
+    get_sender_info,
+    list_attachments,
+    load_eml,
+    safe_hostname,
+)
 from phishscan.scoring import dedupe, score
 from phishscan.urlchecks import check_hosts
 
@@ -193,8 +200,10 @@ def test_randomly_generated_sender_domain_is_flagged():
 
 
 def test_normal_sender_domains_are_not_flagged():
-    for sender in ("news@maplehillwinery.com", "a@my-company.co.uk", "info@m\u00fcnchen.de",
-                   "orders@jonesfamilyfarms.com"):
+    # Made-up domains. "examplefarmstand" is exactly 16 letters, the length at which
+    # looks_random() starts checking, so it tests that ordinary words at the threshold pass.
+    for sender in ("news@example-newsletter.com", "a@my-company.co.uk", "info@m\u00fcnchen.de",
+                   "orders@examplefarmstand.com"):
         assert check_sender_address(make_msg(sender)) == [], sender
 
 
@@ -302,18 +311,33 @@ def test_missing_api_key_is_skipped_quietly():
         assert lookups.check_virustotal(load_eml(TEST1)) == []
 
 
+# ---------- malformed URLs (a real sample crashed the scan) ----------
+
 def test_safe_hostname_handles_malformed_urls():
-    from phishscan.parser import safe_hostname
     assert safe_hostname("http://[broken.example.com/login") == ""
     assert safe_hostname("https://Login.PayPal.com/x") == "login.paypal.com"
 
+
+def test_email_with_malformed_url_is_still_scanned(tmp_path):
+    eml = tmp_path / "bad_url.eml"
+    eml.write_text(
+        "From: Someone <someone@example.com>\n"
+        "Subject: hello\n"
+        "Content-Type: text/html; charset=utf-8\n\n"
+        '<html><body><a href="http://[abc/x">click</a> and http://[def/y</body></html>\n',
+        encoding="utf-8",
+    )
+    result = run_all(str(eml))
+    assert result["verdict"] in {"LOW RISK", "SUSPICIOUS", "LIKELY PHISHING"}
+
+
+# ---------- encoded IP hostnames ----------
+
 def test_encoded_ip_host_is_flagged():
-    from phishscan.urlchecks import check_hosts
     checks = [f["check"] for f in check_hosts({"2997024026"})]
     assert "encoded_ip_host" in checks
 
 
 def test_normal_host_is_not_encoded_ip():
-    from phishscan.urlchecks import check_hosts
     checks = [f["check"] for f in check_hosts({"www.nyu.edu"})]
     assert "encoded_ip_host" not in checks

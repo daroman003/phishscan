@@ -9,3 +9,5 @@ results*.csv
 misses*.txt
 .claude/
 CLAUDE.md
+samples/holdout/
+holdout*.csv

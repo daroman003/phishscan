@@ -19,10 +19,9 @@ from .checks import (
 )
 from .links import check_links, extract_links
 from .lookalikes import check_lookalikes
-from .parser import analyze, defang, get_auth_results, load_eml
+from .parser import analyze, defang, get_auth_results, load_eml, safe_hostname
 from .scoring import dedupe, score
 from .urlchecks import check_urls
-from .parser import analyze, defang, get_auth_results, load_eml, safe_hostname
 
 
 def run_all(path, use_vt=False):

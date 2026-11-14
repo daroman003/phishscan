@@ -16,6 +16,7 @@ import argparse
 
 import tldextract
 from rapidfuzz import fuzz
+
 from .parser import defang, extract_urls, get_sender_info, load_eml, safe_hostname
 
 _extract = tldextract.TLDExtract(suffix_list_urls=())
@@ -150,7 +151,7 @@ def collect_hosts(msg):
     for url in extract_urls(msg):
         host = safe_hostname(url)
         if host:
-            hosts.setdefault(host.lower(), "link")
+            hosts.setdefault(host, "link")  # safe_hostname already lowercases
     return hosts
 
 
