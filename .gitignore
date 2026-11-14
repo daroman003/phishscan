@@ -7,3 +7,5 @@ results*.csv
 .pytest_cache/
 .vt_cache.json
 misses*.txt
+.claude/
+CLAUDE.md

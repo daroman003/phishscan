@@ -306,3 +306,14 @@ def test_safe_hostname_handles_malformed_urls():
     from phishscan.parser import safe_hostname
     assert safe_hostname("http://[broken.example.com/login") == ""
     assert safe_hostname("https://Login.PayPal.com/x") == "login.paypal.com"
+
+def test_encoded_ip_host_is_flagged():
+    from phishscan.urlchecks import check_hosts
+    checks = [f["check"] for f in check_hosts({"2997024026"})]
+    assert "encoded_ip_host" in checks
+
+
+def test_normal_host_is_not_encoded_ip():
+    from phishscan.urlchecks import check_hosts
+    checks = [f["check"] for f in check_hosts({"www.nyu.edu"})]
+    assert "encoded_ip_host" not in checks

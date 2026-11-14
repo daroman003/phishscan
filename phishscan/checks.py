@@ -12,6 +12,10 @@ from .links import registered_domain
 from .lookalikes import BRANDS
 from .parser import defang, get_auth_results, get_bodies, get_sender_info, list_attachments
 
+# Free webmail providers. A business sender whose replies go to one of these is a red flag.
+FREEMAIL = {"gmail.com", "hotmail.com", "outlook.com", "live.com", "yahoo.com", "aol.com",
+            "icloud.com", "proton.me", "protonmail.com", "gmx.com", "mail.ru", "yandex.com"}
+
 URGENT_PHRASES = [
     "urgent", "immediately", "within 24 hours", "verify your account",
     "confirm your", "account has been", "suspended", "unusual activity",
@@ -92,6 +96,11 @@ def check_sender(msg):
         found.append(finding(
             "reply_to_mismatch", "medium",
             f"Replies go to {reply_reg}, not the sender's domain {from_reg}"))
+
+    if reply_reg in FREEMAIL and from_reg and from_reg not in FREEMAIL:
+        found.append(finding(
+            "reply_to_freemail", "high",
+            f"Sent from {from_reg} but replies go to free webmail ({reply_reg})"))
 
     path_reg = registered_domain(sender["return_path_domain"]) if sender["return_path_domain"] else ""
     if path_reg and from_reg and path_reg != from_reg:

@@ -32,6 +32,10 @@ FREE_HOSTING = (
 
 IP_IN_HOST = re.compile(r"(?<![\d.])\d{1,3}(?:\.\d{1,3}){3}(?![\d])")
 
+# A hostname that is only a number (decimal like 2997024026, or hex like 0xb2a4...)
+# is an IP address in disguise. Browsers accept it; legit email never uses it.
+ENCODED_IP = re.compile(r"^(?:0x[0-9a-f]+|\d+)$")
+
 
 def _finding(check, hosts, message):
     shown = ", ".join(defang(h) for h in sorted(hosts)[:2])
@@ -41,7 +45,7 @@ def _finding(check, hosts, message):
 
 def check_hosts(hosts):
     """Check a collection of hostnames. Returns at most one finding per check type."""
-    risky_tld, free_host, ip_host = set(), set(), set()
+    risky_tld, free_host, ip_host, encoded = set(), set(), set(), set()
     for host in hosts:
         if not host:
             continue
@@ -51,6 +55,8 @@ def check_hosts(hosts):
             free_host.add(host)
         if IP_IN_HOST.search(host):
             ip_host.add(host)
+        if ENCODED_IP.match(host):
+            encoded.add(host)
 
     findings = []
     if risky_tld:
@@ -59,6 +65,9 @@ def check_hosts(hosts):
         findings.append(_finding("free_hosting_link", free_host, "Link points to a free hosting platform"))
     if ip_host:
         findings.append(_finding("ip_in_hostname", ip_host, "Link hostname contains a raw IP address"))
+    if encoded:
+        findings.append({"check": "encoded_ip_host", "severity": "high",
+                         "detail": f"Link hides an IP address as a number: {defang(sorted(encoded)[0])}"})
     return findings
 
 
