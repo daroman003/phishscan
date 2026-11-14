@@ -4,3 +4,5 @@ __pycache__/
 samples/legit/
 samples/phishing/
 results*.csv
+.pytest_cache/
+.vt_cache.json
