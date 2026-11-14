@@ -24,16 +24,24 @@ Verdict: LIKELY PHISHING  (score 100/100)
 From:    PayPal Support <support@paypa1-secure.example.com>
 Subject: Urgent: Your account has been limited
 
-Findings (9):
+Findings (10):
   [HIGH  ] spf_fail: SPF failed: sending server is not authorized for this domain
   [HIGH  ] dmarc_fail: DMARC failed: the message does not align with the sender domain's policy
   [HIGH  ] display_name_spoof: Display name says 'PayPal Support' but the address is on example.com
   [HIGH  ] double_extension: 'invoice.pdf.exe' pretends to be a .pdf file but is really .exe
   [HIGH  ] link_text_mismatch: Link shows 'hxxps://www[.]paypal[.]com/signin' but goes to hxxp://paypa1-secure[.]example[.]com/login
-  [HIGH  ] lookalike_domain: From address: paypa1-secure[.]example[.]com imitates 'paypal' with swapped characters, ...
+  [HIGH  ] lookalike_domain: From address: paypa1-secure[.]example[.]com imitates 'paypal' with swapped characters, but the real domain is example[.]com
   [MEDIUM] reply_to_mismatch: Replies go to example.org, not the sender's domain example.com
-  [LOW   ] return_path_mismatch: Bounce address domain example.net differs from From domain example.com ...
-  [LOW   ] urgent_language: Pressure wording found: 'urgent', 'within 24 hours', 'account has been', ...
+  [MEDIUM] url_shortener: Shortened link hides its destination: hxxp://bit[.]ly/fake-example-link
+  [LOW   ] return_path_mismatch: Bounce address domain example.net differs from From domain example.com (common for bulk mailers, so low weight)
+  [LOW   ] urgent_language: Pressure wording found: 'urgent', 'within 24 hours', 'account has been', 'unusual activity'
+
+URLs: 3 across 3 domains (full list with --json)
+  bit[.]ly (1)
+  paypa1-secure[.]example[.]com (1)
+  www[.]paypal[.]com (1)
+Attachments (1):
+  invoice.pdf.exe  sha256=1a96c089a986499e7174bc42de04044176ae785f9f5cc8552bbfa6be270b0d6d
 ```
 
 The sample emails in `samples/` are fake and written for testing.
