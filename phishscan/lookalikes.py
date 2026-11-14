@@ -13,12 +13,10 @@ Usage:
     python -m phishscan.lookalikes samples/test1.eml
 """
 import argparse
-from urllib.parse import urlparse
 
 import tldextract
 from rapidfuzz import fuzz
-
-from .parser import defang, extract_urls, get_sender_info, load_eml
+from .parser import defang, extract_urls, get_sender_info, load_eml, safe_hostname
 
 _extract = tldextract.TLDExtract(suffix_list_urls=())
 
@@ -150,7 +148,7 @@ def collect_hosts(msg):
         if sender[key]:
             hosts.setdefault(sender[key], label)
     for url in extract_urls(msg):
-        host = urlparse(url).hostname
+        host = safe_hostname(url)
         if host:
             hosts.setdefault(host.lower(), "link")
     return hosts

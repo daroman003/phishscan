@@ -13,9 +13,8 @@ Usage:
 """
 import argparse
 import re
-from urllib.parse import urlparse
 
-from .parser import defang, extract_urls, load_eml
+from .parser import defang, extract_urls, load_eml, safe_hostname
 
 RISKY_TLDS = {
     "store", "site", "art", "top", "xyz", "click", "icu", "buzz",
@@ -64,7 +63,7 @@ def check_hosts(hosts):
 
 
 def check_urls(msg):
-    hosts = {(urlparse(url).hostname or "").lower() for url in extract_urls(msg)}
+    hosts = {safe_hostname(url) for url in extract_urls(msg)}
     return check_hosts(hosts)
 
 

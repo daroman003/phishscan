@@ -8,7 +8,6 @@ Usage:
 import argparse
 import json
 from collections import Counter
-from urllib.parse import urlparse
 
 from .checks import (
     check_attachments,
@@ -23,6 +22,7 @@ from .lookalikes import check_lookalikes
 from .parser import analyze, defang, get_auth_results, load_eml
 from .scoring import dedupe, score
 from .urlchecks import check_urls
+from .parser import analyze, defang, get_auth_results, load_eml, safe_hostname
 
 
 def run_all(path, use_vt=False):
@@ -47,7 +47,7 @@ def run_all(path, use_vt=False):
     findings = dedupe(findings)
 
     result = analyze(path)  # sender info, auth, received chain, urls, attachments
-    hosts = Counter(urlparse(u).hostname or "" for u in result["urls"])
+    hosts = Counter(safe_hostname(u) for u in result["urls"])
     result["url_hosts"] = [{"host": defang(h), "count": n} for h, n in hosts.most_common()]
     result["urls"] = [defang(u) for u in result["urls"]]  # never leave clickable URLs in a report
     result["findings"] = findings

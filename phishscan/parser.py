@@ -9,7 +9,19 @@ import re
 from email import policy
 from email.parser import BytesParser
 from email.utils import parseaddr
+from urllib.parse import urlparse
 
+def safe_hostname(url):
+    """Return the lowercase hostname of a URL, or "" if it's malformed.
+
+    Phishing emails sometimes contain broken URLs (e.g. a stray '['), and
+    urlparse raises ValueError on those instead of returning None.
+    """
+    try:
+        return (urlparse(url).hostname or "").lower()
+    except ValueError:
+        return ""
+    
 URL_RE = re.compile(r"https?://[^\s<>\"')\]]+", re.IGNORECASE)
 
 

@@ -13,7 +13,6 @@ import re
 import sys
 from collections import Counter
 from pathlib import Path
-from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup
 
@@ -26,6 +25,7 @@ from .parser import (
     get_sender_info,
     list_attachments,
     load_eml,
+    safe_hostname,
 )
 
 
@@ -49,7 +49,7 @@ def summarize(path, score):
     msg = load_eml(path)
     sender = get_sender_info(msg)
     auth = get_auth_results(msg)
-    hosts = Counter(urlparse(u).hostname or "?" for u in extract_urls(msg))
+    hosts = Counter(safe_hostname(u) or "?" for u in extract_urls(msg))
     attachments = [a["filename"] for a in list_attachments(msg)]
     top_hosts = ", ".join(f"{defang(h)}({n})" for h, n in hosts.most_common(3)) or "none"
     reply_to = defang(sender["reply_to_domain"]) if sender["reply_to_domain"] else "-"

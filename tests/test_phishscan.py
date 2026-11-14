@@ -300,3 +300,9 @@ def test_malicious_attachment_becomes_a_high_finding(tmp_path):
 def test_missing_api_key_is_skipped_quietly():
     with patch.dict("os.environ", {}, clear=True):
         assert lookups.check_virustotal(load_eml(TEST1)) == []
+
+
+def test_safe_hostname_handles_malformed_urls():
+    from phishscan.parser import safe_hostname
+    assert safe_hostname("http://[broken.example.com/login") == ""
+    assert safe_hostname("https://Login.PayPal.com/x") == "login.paypal.com"

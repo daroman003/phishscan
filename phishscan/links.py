@@ -10,12 +10,11 @@ Usage:
 """
 import argparse
 import re
-from urllib.parse import urlparse
 
 import tldextract
 from bs4 import BeautifulSoup
 
-from .parser import defang, get_bodies, load_eml
+from .parser import defang, get_bodies, load_eml, safe_hostname
 
 # Use the public-suffix list bundled with the package (no network lookups).
 _extract = tldextract.TLDExtract(suffix_list_urls=())
@@ -47,7 +46,7 @@ def registered_domain(url_or_text):
     text = url_or_text.strip()
     if not re.match(r"^https?://", text, re.IGNORECASE):
         text = "http://" + text
-    host = urlparse(text).hostname or ""
+    host = safe_hostname(text)
     parts = _extract(host)
     if not parts.domain or not parts.suffix:
         return ""
