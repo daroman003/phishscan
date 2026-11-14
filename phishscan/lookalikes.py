@@ -30,7 +30,7 @@ BRANDS = {
     "amazon": {"amazon.com", "amazon.co.uk", "amazon.ca", "amazon.de", "amazonaws.com",
                "amazonses.com", "amazon-adsystem.com", "media-amazon.com",
                "images-amazon.com", "ssl-images-amazon.com"},
-    "apple": {"apple.com", "icloud.com", "apple.news"},
+    "apple": {"apple.com", "icloud.com", "apple.news", "applemediaservices.com"},
     "google": {"google.com", "gmail.com", "googlemail.com", "googleapis.com",
                "google-analytics.com", "googleusercontent.com", "googletagmanager.com",
                "googlesyndication.com", "googleadservices.com", "googlevideo.com"},

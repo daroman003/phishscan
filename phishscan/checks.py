@@ -24,6 +24,13 @@ URGENT_PHRASES = [
     "storage full", "password has expired", "payment method needs", "blocked your account",
     "subscription has expired", "will be deleted",
 ]
+# Every phrase must start at a word boundary, so it can't fire inside random tracking
+# tokens ("...9xafkycvxmi..."). Short phrases (under 5 letters, like "kyc") must also end
+# at one. Longer phrases may continue, so "urgent" still matches "urgently" / "urgente".
+URGENT_PATTERNS = [
+    (p, re.compile(r"\b" + re.escape(p) + (r"\b" if len(p) < 5 else "")))
+    for p in URGENT_PHRASES
+]
 
 # Distinctive advance-fee / lottery scam wording. Two or more of these is a strong signal.
 SCAM_PHRASES = [
@@ -121,12 +128,15 @@ def check_sender(msg):
             spoofed = True
             break
 
-    # Subject names a brand that the sender is not.
+    # Subject names a brand that the sender is not. If the sender passed DMARC, it is
+    # verified and the brand is more likely just a topic (a job ad, a shipping notice),
+    # so the finding drops to low.
     if not spoofed:
+        severity = "low" if get_auth_results(msg)["dmarc"] == "pass" else "medium"
         for brand, legit_domains in BRANDS.items():
             if mentions_brand(sender["subject"], brand) and from_reg not in legit_domains:
                 found.append(finding(
-                    "brand_in_subject_mismatch", "medium",
+                    "brand_in_subject_mismatch", severity,
                     f"Subject mentions '{brand}' but the sender is {from_reg or 'an unknown domain'}"))
                 break
     return found
@@ -182,7 +192,7 @@ def check_urgency(msg):
     text = str(msg.get("Subject", "")).lower()
     for _, body in get_bodies(msg):
         text += " " + body.lower()
-    hits = [phrase for phrase in URGENT_PHRASES if phrase in text]
+    hits = [phrase for phrase, pattern in URGENT_PATTERNS if pattern.search(text)]
     if not hits:
         return []
     shown = ", ".join(f"'{h}'" for h in hits[:4])

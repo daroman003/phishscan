@@ -34,6 +34,7 @@ TRACKING_DOMAINS = {
     "mailchimp.com", "sendgrid.net", "mandrillapp.com", "mailgun.org",
     "klclick1.com", "klaviyomail.com", "hubspotlinks.com", "exct.net",
     "createsend.com", "sendibt3.com", "mjt.lu", "sparkpostmail.com",
+    "bloomreach.com",
 }
 
 LOOKS_LIKE_URL = re.compile(
@@ -76,16 +77,22 @@ def extract_links(msg):
     return links
 
 
-def check_links(links, trusted_sender=False):
+def check_links(links, trusted_sender=False, sender_domain=""):
     """Turn the raw links into a list of findings (check / severity / detail).
 
     trusted_sender=True means the email passed DMARC (it really came from the domain
     it claims), so click-tracking redirects are treated as normal newsletter behavior.
+    sender_domain is the registered domain of the From address.
     """
     findings = []
     for link in links:
         # 1. Visible text claims one site, the link goes to another.
         if link["text_domain"] and link["text_domain"] != link["href_domain"]:
+            # A DMARC-verified sender linking to its own domain (often its own click
+            # tracker, e.g. url.brand.com) is not deceiving anyone about the destination.
+            # No finding at all: a low finding per link would add up in long newsletters.
+            if trusted_sender and sender_domain and link["href_domain"] == sender_domain:
+                continue
             if trusted_sender and link["href_domain"] in TRACKING_DOMAINS:
                 findings.append(
                     {

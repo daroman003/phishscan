@@ -17,9 +17,9 @@ from .checks import (
     check_sender_address,
     check_urgency,
 )
-from .links import check_links, extract_links
+from .links import check_links, extract_links, registered_domain
 from .lookalikes import check_lookalikes
-from .parser import analyze, defang, get_auth_results, load_eml, safe_hostname
+from .parser import analyze, defang, get_auth_results, get_sender_info, load_eml, safe_hostname
 from .scoring import dedupe, score
 from .urlchecks import check_urls
 
@@ -37,7 +37,9 @@ def run_all(path, use_vt=False):
     findings += check_urgency(msg)
     findings += check_attachments(msg)
     trusted = get_auth_results(msg)["dmarc"] == "pass"  # sender is who they claim to be
-    findings += check_links(extract_links(msg), trusted_sender=trusted)
+    from_domain = get_sender_info(msg)["from_domain"]
+    sender_domain = registered_domain(from_domain) if from_domain else ""
+    findings += check_links(extract_links(msg), trusted_sender=trusted, sender_domain=sender_domain)
     findings += check_lookalikes(msg)
     if use_vt:
         from .lookups import check_virustotal  # imported here so --vt stays optional

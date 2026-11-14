@@ -81,12 +81,56 @@ Results with the current code:
 |---|---|
 | Tuning set | **354 of 498 detected (71%)**, up from 349/500 (70%) |
 | Holdout | **35 of 50 detected (70%)** |
-| Legitimate set | **0 of 7 false positives**. Neither new rule fired on legitimate mail |
+| Legitimate set | **0 of 7 false positives**. Neither new rule fired on legitimate mail (the set grew to 76 in Round 4) |
 
 The tuning gain is small (+6 emails before de-duplication): the new rules target narrow,
 high-confidence patterns rather than broad ones. Note that a free-webmail Reply-To also
 triggers the existing `reply_to_mismatch`, so the two stack (45 points); that is
 intended, as the combination is a strong signal on its own.
+
+## Round 4: false positives on a 76-email legit set
+
+The legitimate set grew from 7 to 76 emails (37 senders, 29 domains) by exporting a
+mailbox and splitting it with `tools/mbox_to_eml.py`, which skips any Message-ID already
+in the set. On the bigger set the false-positive rate was **7 of 76 (9%)**, so the 0/7
+from earlier rounds had been hiding real problems.
+
+All 7 came from two causes:
+
+- **Job-alert emails from a job board (4):** subjects name the hiring company, which can be
+  a brand on the brand list, and that fired `brand_in_subject_mismatch`, and a link to Apple's real
+  `applemediaservices.com` was read as an Apple imitation (`brand_in_domain`, high).
+- **Retail newsletters (3):** link text shows one of the sender's sites but the link goes
+  through a click tracker, either the sender's own (`url.<sender-domain>`) or a
+  marketing platform not on the tracker list. One of these scored LIKELY PHISHING.
+
+Every sender involved passed DMARC. Each fix was made on its own and all three sets were
+re-run after each one:
+
+| Step | Change | Tuning (498) | Holdout (50) | Legit false positives (76) |
+|---|---|---|---|---|
+| 0 | Starting point | 354 (71.1%) | 35 (70%) | **7 (9.2%)** |
+| 1 | No `link_text_mismatch` when the link goes to the sender's own registered domain **and** DMARC passed | 354 | 35 | 5 (6.6%) |
+| 2 | `applemediaservices.com` added to Apple's real domains | 354 | 35 | 1 (1.3%) |
+| 3 | `bloomreach.com` added to the known tracker list | 354 | 35 | **0 (0%)** |
+| 4 | Urgent phrases must start at a word boundary; short ones (`kyc`) must be whole words | 354 | 35 | 0 |
+| 5 | `brand_in_subject_mismatch` drops to low when DMARC passes (medium otherwise) | 354 | 35 | 0 |
+
+Notes:
+
+- **No phishing verdict changed** on either set at any step.
+- Step 1 adds no finding at all, rather than a low one, because each low finding adds 5
+  points and a newsletter with many self-tracked links would add up past the threshold.
+- Step 4: `kyc` had been matching inside random tracking tokens in 62 tuning emails,
+  quietly adding 5 points to each. A first version required a boundary on both ends,
+  which also stopped "urgent" from matching "urgently" and the Portuguese "urgente"
+  (7 tuning emails). The final rule only requires the end boundary for phrases shorter
+  than 5 letters.
+- Steps 4 and 5 changed scores but no verdicts. They were kept as safety margin: the job
+  alerts now score 5, not 45, so a single extra weak signal can't push them over.
+- **Caveat:** 0/76 is a tuning result, since the rules were fixed against these exact
+  emails. Fresh legitimate mail is needed to measure the real rate. The holdout was
+  scored after every step but never used to choose a change.
 
 ## Known misses (not fixed on purpose)
 
@@ -97,13 +141,13 @@ intended, as the combination is a strong signal on its own.
 
 ## Holdout result
 
-Holdout set: **35 of 50 detected (70%)**, scored with the Round 3 code. An earlier run
-with the Round 2 code detected 34 of 50 (68%).
+Holdout set: **35 of 50 detected (70%)** with the Round 3 and Round 4 code. An earlier
+run with the Round 2 code detected 34 of 50 (68%).
 
 ## Ideas not done
 
 - Language-independent signals (sender/domain age, URL structure) instead of wording lists.
 - Threshold sweep: plot detection vs false positives as the SUSPICIOUS cutoff moves.
-- A bigger legitimate set to tighten the false-positive estimate (7 emails is too few:
-  one false positive would be 14%).
+- A fresh legitimate set that was not used for tuning, to measure the false-positive
+  rate independently (the 76-email set has now been tuned against).
 - Web interface for pasting an email or link.

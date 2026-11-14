@@ -14,6 +14,7 @@ from phishscan.checks import (
     check_scam_language,
     check_sender,
     check_sender_address,
+    check_urgency,
     mentions_brand,
 )
 from phishscan.links import check_links, extract_links
@@ -150,6 +151,11 @@ def test_amazon_ses_and_cdn_domains_are_not_flagged():
     assert check_host("cdninstagram.com", "link") == []
 
 
+def test_apple_media_services_domain_is_not_flagged():
+    assert check_host("tools.applemediaservices.com", "link") == []
+    assert "brand_in_domain" in checks_of(check_host("applemediaservices-login.com", "link"))
+
+
 def test_return_path_is_not_checked_for_lookalikes():
     assert "mailer-xk29.example.net" not in collect_hosts(load_eml(TEST1))
 
@@ -169,8 +175,32 @@ def test_tracking_redirect_is_still_high_without_dmarc_pass():
     assert [f["severity"] for f in findings] == ["high"]
 
 
+def test_bloomreach_tracker_is_low_when_sender_passes_dmarc():
+    assert [f["severity"] for f in check_links(tracked_link("bloomreach.com"), trusted_sender=True)] == ["low"]
+    assert [f["severity"] for f in check_links(tracked_link("bloomreach.com"), trusted_sender=False)] == ["high"]
+
+
 def test_unknown_redirect_domain_is_high_even_with_dmarc_pass():
     findings = check_links(tracked_link("totally-new-site.net"), trusted_sender=True)
+    assert [f["severity"] for f in findings] == ["high"]
+
+
+def own_domain_link():
+    return [{"href": "https://url.shop.com/click?q=abc", "text": "www.shop-events.com",
+             "href_domain": "shop.com", "text_domain": "shop-events.com"}]
+
+
+def test_link_to_senders_own_domain_is_not_flagged_when_dmarc_passes():
+    assert check_links(own_domain_link(), trusted_sender=True, sender_domain="shop.com") == []
+
+
+def test_link_to_senders_own_domain_is_still_high_without_dmarc_pass():
+    findings = check_links(own_domain_link(), trusted_sender=False, sender_domain="shop.com")
+    assert [f["severity"] for f in findings] == ["high"]
+
+
+def test_link_to_another_domain_is_still_high_even_with_dmarc_pass():
+    findings = check_links(own_domain_link(), trusted_sender=True, sender_domain="other.com")
     assert [f["severity"] for f in findings] == ["high"]
 
 
@@ -237,6 +267,25 @@ def test_brand_in_subject_from_other_domain_is_flagged_but_not_from_the_brand():
     assert "brand_in_subject_mismatch" not in checks_of(check_sender(make_msg("McAfee <a@mcafee.com>", subject)))
 
 
+def test_urgent_phrases_match_whole_words_only():
+    assert check_urgency(make_msg("a@b.com", "Complete your KYC today")) != []
+    assert check_urgency(make_msg("a@b.com", "hi", "tracking id xkyc9 and backyclub")) == []
+    assert check_urgency(make_msg("a@b.com", "hi", "Your account has been suspended.")) != []
+    assert check_urgency(make_msg("a@b.com", "hi", "Payment must be settled urgently.")) != []
+    assert check_urgency(make_msg("a@b.com", "hi", "token abcurgentxyz")) == []
+
+
+def brand_subject_severity(dmarc):
+    msg = make_msg("Jobs <alerts@example-jobs.com>", "New openings this week at UPS")
+    msg["Authentication-Results"] = f"mx.example.com; spf=pass; dkim=pass; dmarc={dmarc}"
+    return [f["severity"] for f in check_sender(msg) if f["check"] == "brand_in_subject_mismatch"]
+
+
+def test_brand_in_subject_is_low_when_dmarc_passes_and_medium_otherwise():
+    assert brand_subject_severity("pass") == ["low"]
+    assert brand_subject_severity("fail") == ["medium"]
+
+
 def test_advance_fee_scam_wording_is_high_with_two_phrases():
     body = "Good-Day! This will be a surprise to you. I got your contact through a directory."
     findings = check_scam_language(make_msg("Mrs W <w@gmail.com>", "hello", body))
@@ -251,7 +300,7 @@ def test_throwaway_tld_free_hosting_and_ip_hosts_are_flagged():
 
 
 def test_ordinary_hosts_are_not_flagged_by_url_checks():
-    assert check_hosts({"www.quora.com", "fonts.googleapis.com", "ultrasabers.com",
+    assert check_hosts({"www.example-forum.com", "fonts.googleapis.com", "example-shop.com",
                         "d3k81ch9hvuctc.cloudfront.net", "1123669900.sdkmedia.net"}) == []
 
 

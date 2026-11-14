@@ -40,7 +40,7 @@ The sample emails in `samples/` are fake and written for testing.
 |---|---|
 | **Authentication** | SPF, DKIM and DMARC failures; missing authentication results |
 | **Sender** | From / Reply-To / Return-Path mismatches; business sender whose replies go to free webmail; display name claiming a brand the address doesn't belong to; brand named in the subject by an unrelated sender; invalid or randomly generated sender domains; missing sender address |
-| **Links** | Link text that shows one site while the link goes to another; URL shorteners; known email-marketing click trackers (trusted only if the sender passed DMARC) |
+| **Links** | Link text that shows one site while the link goes to another; URL shorteners; known email-marketing click trackers and links to the sender's own domain (both trusted only if the sender passed DMARC) |
 | **Lookalike domains** | Character swaps (`paypa1`), `rn` for `m`, brand names inside other domains, brand used as a subdomain of another site (`paypal.com.evil.net`), typo-squats, punycode |
 | **URL patterns** | Throwaway TLDs (`.store`, `.site` ...), free hosting platforms (`run.app`, `github.io` ...), raw IP addresses in hostnames, IP addresses disguised as a single number (`http://2997024026/`) |
 | **Attachments** | Double extensions (`invoice.pdf.exe`), executables and scripts, macro-enabled Office files, archives and disk images; SHA-256 hashing |
@@ -110,6 +110,12 @@ python -m phishscan.batch samples/legit --label legit --out results.csv --append
 python -m phishscan.triage samples/phishing --limit 15
 ```
 
+**Building a legitimate set:** export a mail folder (e.g. with Google Takeout) and split it:
+
+```bash
+python tools/mbox_to_eml.py path/to/export.mbox samples/legit
+```
+
 **VirusTotal (optional):** create a free account, then put your key in a `.env` file:
 `VT_API_KEY=your-key-here`. Lookups only ask whether VirusTotal has already seen a hash or
 URL. Nothing is uploaded or submitted, and results are cached.
@@ -123,16 +129,17 @@ email exported from a personal inbox. The sample folders are not in the repo.
 |---|---|---|
 | Tuning set (random sample from phishing_pot, used while writing rules) | 498 | 354 detected (71%) |
 | **Holdout set** (separate random sample, not used to write rules) | 50 | **35 detected (70%)** |
-| Legitimate email (newsletters, alerts, marketing) | 7 | **0 false positives** (small set, so a rough estimate only) |
+| Legitimate email (newsletters, alerts, marketing, job alerts; 37 senders, 29 domains) | 76 | **0 false positives**, down from 7 (9%) before the Round 4 fixes |
 
 "Detected" means a verdict of SUSPICIOUS or LIKELY PHISHING. The holdout row is the honest
 number: the rules were written after studying the tuning set, so that set's result is
 optimistic. The holdout was checked for duplicates against the tuning set by content and
 Message-ID, and the two that turned up were removed from the tuning set.
 
-With only 7 legitimate emails, one false positive would move the rate by about 14 points;
-a larger legitimate set is the main gap in this evaluation. See [TUNING.md](TUNING.md)
-for every change and the reason for it.
+The legitimate set has the same caveat: its 0 false positives was reached by fixing the
+7 it started with, so it is a tuning result, not an independent one. Fresh legitimate
+mail is the best next test. The Round 4 fixes did not change a single verdict on either
+phishing set. See [TUNING.md](TUNING.md) for every change and the reason for it.
 
 ## Limitations
 
@@ -163,7 +170,9 @@ phishscan/
   batch.py        folder scan, CSV output, accuracy summary
   triage.py       summaries of missed emails for rule tuning
   __main__.py     command-line entry point
-tests/            pytest suite (48 tests)
+tests/            pytest suite (55 tests)
+tools/
+  mbox_to_eml.py  split a mailbox export (e.g. Gmail Takeout) into .eml files, skipping duplicates
 samples/          fake test emails
 TUNING.md         log of every tuning change
 ```
