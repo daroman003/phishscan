@@ -6,3 +6,4 @@ samples/phishing/
 results*.csv
 .pytest_cache/
 .vt_cache.json
+misses*.txt
